@@ -52,43 +52,7 @@ trainingFeatures = trainingFeatures(1:end-15,:);
 % create the classifier
 model = fitcecoc(trainingFeatures, trainingLabel);
 
-%% Test it
-person = 6;
-queryImage = read(test(person),1);
-queryFeatures = extractHOGFeatures(queryImage);
-personLabel = predict(model,queryFeatures);
-% map back to training set to find identity
-booleanIndex = strcmp(personLabel, personIndex);
-integerIndex = find(booleanIndex);
-subplot(1,2,1);imshow(queryImage);title('Query Face');
-subplot(1,2,2);imshow(read(training(integerIndex),1));title('Matched Class');
-training(1).Description
-
 %% Calculate the accuracy
-
-% for 1
-correct_pred = 0;
-false_pred = 0;
-queryImage = read(test(11),12);
-queryFeatures = extractHOGFeatures(queryImage);
-imfinfo('C:\Users\98114236\Downloads\CroppedYale\CroppedYale\yaleB13\yaleB13_P00A+000E+00.pgm')
-size(queryFeatures)
-imshow(read(test(12),13))
-personLabel = predict(model,queryFeatures);
-booleanIndex = strcmp(personLabel, personIndex);
-integerIndex = find(booleanIndex);
-if integerIndex == 9
-    correct_pred = correct_pred + 1;
-else
-    false_pred = false_pred + 1;
-end
-
-%
-m = zeros(1,16560);
-queryImage = read(test(1),1);
-queryFeatures = extractHOGFeatures(queryImage);
-m(1,:) = queryFeatures;
-[labelIdx,score] = predict(model,m)
 
 % for each subject...
 correct_pred = 0;
