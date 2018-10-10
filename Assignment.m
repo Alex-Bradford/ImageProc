@@ -22,7 +22,7 @@ dataset = imageSet('C:\Users\98114236\Downloads\CroppedYale\CroppedYale','recurs
 
 % We hard code 16560 because that is the size of array produced when
 % extracting HOG feature from the 192x168 images
-trainingFeatures = zeros(size(training,2)*training(1).Count,16560);
+trainingFeatures = zeros(size(training,2)*training(1).Count-42,16560);
 featureCount = 1;
 % for each subject...
 for i = 1:size(training,2)
@@ -40,7 +40,7 @@ end
 
 % Remove the last 15 rows otherwise training the classifier will throw an
 % error...this takes a while though
-trainingFeatures = trainingFeatures(1:end-15,:);
+% trainingFeatures = trainingFeatures(1:end-15,:);
 
 %% Classification
 % training a classifier follows the pattern:
