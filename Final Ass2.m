@@ -182,3 +182,58 @@ successrate = (height(positiveFileTable)/height(fileTable)) *100
 successrate = uint8(successrate)
 
 fprintf('Successully cropped (%d of %d) images: [successrate = %d%%] \n', height(positiveFileTable), height(fileTable), successrate);
+
+
+K = menu('How would you like to Pre-Process the data?','Histogram Equalization','Salt & Pepper','Gaussian Blur', 'No Pre-Processing')
+
+if K == 1
+% Run histogram equalization
+% Output to 'processing folder'
+end
+
+if K == 2
+% Salt & Pepper
+% Output to 'processing folder'
+end
+
+if K == 3
+% Gaussian Blur
+% Output to 'processing folder'
+end
+
+if K == 4
+% DO NOTHING
+% Output to 'processing folder'
+end
+
+K = menu('How would you like to extract your features and classify the faces'),'SVM with HoG','SVM with SURF','Convolution Neural Network', 'Naive Bayes with ??', 'Lucky Dip?')
+
+if K == 1
+% SVM with HOG
+% Output accuracy
+end
+
+if K == 2
+% SVM with SURF
+% Output accuracy
+end
+
+if K == 3
+% Convolution Neural Network
+% Output accuracy
+end
+
+if K == 4
+% Naives Bayes with ??
+% Output accuracy
+end
+
+if K == 5
+% RANDOM!!
+% Output accuracy
+end
+
+% Using the model just created, create a dialogue box to select label and
+% image and predict on that image.
+
+
