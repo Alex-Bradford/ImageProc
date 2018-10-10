@@ -219,7 +219,9 @@ if M == 1
         imds = imageDatastore(outputBaseFolder, ...
         'IncludeSubfolders',true,'LabelSource', 'foldernames');
     end
+    figure
     imshowpair(for_comparison,imread(imds.Files{1}),'montage')
+    title('Here is an example of the pre processing you just did!');
     
     
 % Output to 'processing folder'
@@ -244,6 +246,54 @@ N = menu('How would you like to extract your features and classify the faces','S
 
 if N == 1
 % SVM with HOG
+    % resize all images
+    imds.ReadSize = numpartitions(imds);
+    imds.ReadFcn = @(loc)imresize(imread(loc), [192, 168]);
+    % split into train and test
+    uniq_labels = countEachLabel(imds);
+    uniq_labels = height(uniq_labels);
+    label_counts = imds.countEachLabel;
+    numTrainFiles = round(0.8*label_counts{1,2},0);
+    [imdsTraining, imdsTest] = splitEachLabel(imds, numTrainFiles, 'randomize');
+    % create array to store features
+    trainingFeatures = zeros(numTrainFiles*uniq_labels,16560);
+    % calc number of files
+    tr_no_of_files = 0;
+    tr_label_counts = imdsTraining.countEachLabel;
+    for i=1:height(tr_label_counts);
+        tr_no_of_files = tr_no_of_files + tr_label_counts{i,2};
+    end
+    % Get HOGFeatures for each image
+    featureCount = 1;
+    for i=1:tr_no_of_files;
+        trainingFeatures(featureCount,:) = extractHOGFeatures(readimage(imdsTraining,i));
+        trainingLabel{featureCount} = string(imdsTraining.Labels(i));
+        featureCount = featureCount + 1;
+        %personIndex{i} = training(i).Description;
+    end
+    trainingLabel = cellstr(trainingLabel);
+    % train the model
+    model = fitcecoc(trainingFeatures, trainingLabel);
+    % test the model and calc accuracy
+    % calc number of files
+    te_no_of_files = 0;
+    te_label_counts = imdsTest.countEachLabel;
+    for i=1:height(te_label_counts)
+        te_no_of_files = te_no_of_files + te_label_counts{i,2};
+    end
+    % for each test file
+    correct_pred = 0;
+    false_pred = 0;
+    for i=1:te_no_of_files
+        pred_label = predict(model,extractHOGFeatures(readimage(imdsTest,i)));
+        real_label = cellstr(string(imdsTest.Labels(i)));
+        if pred_label{1} == real_label{1}
+            correct_pred = correct_pred + 1;
+        else
+            false_pred = false_pred + 1;
+        end
+    end
+    accur = correct_pred/(correct_pred+false_pred)
 % Output accuracy
 end
 
