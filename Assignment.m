@@ -21,7 +21,7 @@ dataset = imageSet('C:\Users\98114236\Downloads\CroppedYale\CroppedYale','recurs
 % creates trainingLabels array, maps each training datapoint to subject
 
 % We hard code 16560 because that is the size of array produced when
-% extracting HOG feature from the images
+% extracting HOG feature from the 192x168 images
 trainingFeatures = zeros(size(training,2)*training(1).Count,16560);
 featureCount = 1;
 % for each subject...
