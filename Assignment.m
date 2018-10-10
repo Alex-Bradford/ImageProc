@@ -22,6 +22,7 @@ dataset = imageSet('C:\Users\98114236\Downloads\CroppedYale\CroppedYale','recurs
 
 % We hard code 16560 because that is the size of array produced when
 % extracting HOG feature from the 192x168 images
+% -42 because data is not square and need to correct for this.
 trainingFeatures = zeros(size(training,2)*training(1).Count-42,16560);
 featureCount = 1;
 % for each subject...
