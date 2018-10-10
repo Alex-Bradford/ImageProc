@@ -195,12 +195,33 @@ imds = imageDatastore(outputBaseFolder, ...
 end
 
 M = menu('How would you like to Pre-Process the data?','Histogram Equalization','Salt & Pepper','Gaussian Blur', 'No Pre-Processing')
-    %x = imds.countEachLabel
-    %height(x)
-    %img = readimage(imds,1)
-    %data = readall(imds)
 if M == 1
 % Run histogram equalization
+    % Calculate the number of files in the data store
+    for_comparison = imread(imds.Files{1});
+    label_counts = imds.countEachLabel;
+    no_of_files = 0;
+    for i=1:height(label_counts)
+        no_of_files = no_of_files + label_counts{i,2};
+    end
+    % Apply histogram equalisation to each image
+    for i=1:no_of_files
+        img = readimage(imds,i);
+        img = histeq(img,10);
+        imwrite(img,imds.Files{i}); % push new img to its original location
+    end
+    % read the images again, they have changed.
+    if K == 1
+        imds = imageDatastore(inputbasefolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    if K == 2
+        imds = imageDatastore(outputBaseFolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    imshowpair(for_comparison,imread(imds.Files{1}),'montage')
+    
+    
 % Output to 'processing folder'
 end
 
