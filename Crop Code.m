@@ -12,8 +12,8 @@
 % - Positive Face images (a folder of images with faces)
 % - Negative Face images (a folder of images without faces)
 % [provided examples found at: https://drive.google.com/drive/folders/1R294eKzyphAufWrCLrNbiRXBQnAyGK5b?usp=sharing]
-% - Faces []
-% - NotFaces []
+% - Faces [2mb]
+% - NotFaces [209mb]
 %
 % You will be prompted to set the directory location of these downloaded folders
 %
@@ -28,7 +28,7 @@
 % ***********************************************************************************
 % The Inbuilt face detector successfully identifies - 12080/16380 images (74% accurate)
 % It takes approximately 30 minutes to run with the Yale B Face dataset
-% Training mode Best model found 96.5% of faces from dataset (using provided positive/negative instances)
+% Training mode Best model found 96.5% of faces from dataset (using provided positive/negative instances and labeling each face full-frame)
 
 % Define a start_path.
 start_path = fullfile(matlabroot, '');
@@ -163,3 +163,22 @@ for i=1:height(fileTable)
            fprintf('Failed to Detect Face.\n');
         end
 end
+
+filePattern = sprintf('%s/**/*.pgm', outputBaseFolder);
+% Get ALL images
+files = dir(filePattern);
+
+% Convert files to a table
+positiveFileTable =struct2table(files);
+% Add name column to table
+positiveFileTable.name=string(positiveFileTable.name);
+% Add folder column to table
+positiveFileTable.folder=string(positiveFileTable.folder);
+% Add full file name column to table
+positiveFileTable.fullFileName=positiveFileTable.folder + filesep+ positiveFileTable.name;
+
+successrate = (height(positiveFileTable)/height(fileTable)) *100
+% successrate = round(successrate * 100)/100
+successrate = uint8(successrate)
+
+fprintf('Successully cropped (%d of %d) images: [successrate = %d%%] \n', height(positiveFileTable), height(fileTable), successrate);
