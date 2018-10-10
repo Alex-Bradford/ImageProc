@@ -49,6 +49,11 @@ fprintf('The top level folder is "%s".\n', inputbasefolder);
 
 K = menu('Is the Face Dataset Cropped?','Yes','No')
 
+if K == 1
+    imds = imageDatastore(inputbasefolder, ...
+    'IncludeSubfolders',true,'LabelSource', 'foldernames');
+end
+
 if K == 2
 % Define output basefolders:
 uiwait(msgbox('Please select the successfully cropped face output directory. *note* this folders contents will be deleted prior to detection'));
@@ -185,10 +190,15 @@ successrate = (height(positiveFileTable)/height(fileTable)) *100
 successrate = uint8(successrate)
 
 fprintf('Successully cropped (%d of %d) images: [successrate = %d%%] \n', height(positiveFileTable), height(fileTable), successrate);
+imds = imageDatastore(outputBaseFolder, ...
+    'IncludeSubfolders',true,'LabelSource', 'foldernames');
 end
 
 M = menu('How would you like to Pre-Process the data?','Histogram Equalization','Salt & Pepper','Gaussian Blur', 'No Pre-Processing')
-
+    %x = imds.countEachLabel
+    %height(x)
+    %img = readimage(imds,1)
+    %data = readall(imds)
 if M == 1
 % Run histogram equalization
 % Output to 'processing folder'
@@ -201,7 +211,7 @@ end
 
 if M == 3
 % Gaussian Blur
-% Output to 'processing folder'
+imds = denoisingImageDatastore(imds);
 end
 
 if M == 4
@@ -238,5 +248,3 @@ end
 
 % Using the model just created, create a dialogue box to select label and
 % image and predict on that image.
-
-
