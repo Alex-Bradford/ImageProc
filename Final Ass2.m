@@ -47,6 +47,9 @@ if inputbasefolder == 0
 end
 fprintf('The top level folder is "%s".\n', inputbasefolder);
 
+K = menu('Is the Face Dataset Cropped?','Yes','No')
+
+if K == 2
 % Define output basefolders:
 uiwait(msgbox('Please select the successfully cropped face output directory. *note* this folders contents will be deleted prior to detection'));
 outputBaseFolder = uigetdir(start_path);
@@ -182,53 +185,53 @@ successrate = (height(positiveFileTable)/height(fileTable)) *100
 successrate = uint8(successrate)
 
 fprintf('Successully cropped (%d of %d) images: [successrate = %d%%] \n', height(positiveFileTable), height(fileTable), successrate);
+end
 
+M = menu('How would you like to Pre-Process the data?','Histogram Equalization','Salt & Pepper','Gaussian Blur', 'No Pre-Processing')
 
-K = menu('How would you like to Pre-Process the data?','Histogram Equalization','Salt & Pepper','Gaussian Blur', 'No Pre-Processing')
-
-if K == 1
+if M == 1
 % Run histogram equalization
 % Output to 'processing folder'
 end
 
-if K == 2
+if M == 2
 % Salt & Pepper
 % Output to 'processing folder'
 end
 
-if K == 3
+if M == 3
 % Gaussian Blur
 % Output to 'processing folder'
 end
 
-if K == 4
+if M == 4
 % DO NOTHING
 % Output to 'processing folder'
 end
 
-K = menu('How would you like to extract your features and classify the faces'),'SVM with HoG','SVM with SURF','Convolution Neural Network', 'Naive Bayes with ??', 'Lucky Dip?')
+N = menu('How would you like to extract your features and classify the faces','SVM with HoG','SVM with SURF','Convolution Neural Network', 'Naive Bayes with ??', 'Lucky Dip?')
 
-if K == 1
+if N == 1
 % SVM with HOG
 % Output accuracy
 end
 
-if K == 2
+if N == 2
 % SVM with SURF
 % Output accuracy
 end
 
-if K == 3
+if N == 3
 % Convolution Neural Network
 % Output accuracy
 end
 
-if K == 4
+if N == 4
 % Naives Bayes with ??
 % Output accuracy
 end
 
-if K == 5
+if N == 5
 % RANDOM!!
 % Output accuracy
 end
