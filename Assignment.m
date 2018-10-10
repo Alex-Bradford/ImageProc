@@ -1,6 +1,6 @@
 %% load the image set
 %% Need to delete the ambient image which is about 300kb in Yale11-39
-dataset = imageSet('C:\Users\98114236\Downloads\CroppedYale\CroppedYale','recursive')
+dataset = imageSet('C:\Users\98114236\Downloads\CroppedYale\CroppedYale','recursive');
 
 %% view the images
 %%% display a montage of the first subject
