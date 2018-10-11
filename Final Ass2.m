@@ -209,7 +209,7 @@ for_comparison = imread(fileTable.fullFileName{1});
     title('Here is an example of the cropping you just did!');
 end
 
-M = menu('How would you like to Pre-Process the data?','Histogram Equalization','Salt & Pepper','Gaussian Blur', 'No Pre-Processing')
+M = menu('How would you like to Pre-Process the data?','Histogram Equalization','Salt & Pepper Noise','Gaussian Blur', 'Gaussian Filter', 'Median Filter', 'High-Pass Filter', 'No Pre-Processing')
 if M == 1
 % Run histogram equalization
     % Calculate the number of files in the data store
@@ -239,20 +239,150 @@ if M == 1
     title('Here is an example of the pre processing you just did!');
     
     
-% Output to 'processing folder'
+
 end
 
 if M == 2
 % Salt & Pepper
-% Output to 'processing folder'
+% Calculate the number of files in the data store
+    for_comparison = imread(imds.Files{1});
+    label_counts = imds.countEachLabel;
+    no_of_files = 0;
+    for i=1:height(label_counts)
+        no_of_files = no_of_files + label_counts{i,2};
+    end
+    % Add Salt&Pepper Noise to each image
+    for i=1:no_of_files
+        img = readimage(imds,i);
+        img = imnoise(img,'salt & pepper',0.02);
+        imwrite(img,imds.Files{i}); % push new img to its original location
+    end
+    % read the images again, they have changed.
+    if K == 1
+        imds = imageDatastore(inputbasefolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    if K == 2
+        imds = imageDatastore(outputBaseFolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    figure
+    imshowpair(for_comparison,imread(imds.Files{1}),'montage')
+    title('Here is an example of the pre processing you just did!');
 end
 
 if M == 3
 % Gaussian Blur
-imds = denoisingImageDatastore(imds);
+    for_comparison = imread(imds.Files{1});
+    label_counts = imds.countEachLabel;
+    no_of_files = 0;
+    for i=1:height(label_counts)
+        no_of_files = no_of_files + label_counts{i,2};
+    end
+    % Add Gaussian Noise to each image
+    for i=1:no_of_files
+        img = readimage(imds,i);
+        img = imnoise(img,'gaussian',0,0.025);
+        imwrite(img,imds.Files{i}); % push new img to its original location
+    end
+    % read the images again, they have changed.
+    if K == 1
+        imds = imageDatastore(inputbasefolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    if K == 2
+        imds = imageDatastore(outputBaseFolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    figure
+    imshowpair(for_comparison,imread(imds.Files{1}),'montage')
+    title('Here is an example of the pre processing you just did!');
 end
 
 if M == 4
+    %Gaussian Filter%
+ for_comparison = imread(imds.Files{1});
+    label_counts = imds.countEachLabel;
+    no_of_files = 0;
+    for i=1:height(label_counts)
+        no_of_files = no_of_files + label_counts{i,2};
+    end
+    % Apply Gaussian Filter to each image
+    for i=1:no_of_files
+        img = readimage(imds,i);
+        img = imgaussfilt(img);
+        imwrite(img,imds.Files{i}); % push new img to its original location
+    end
+    % read the images again, they have changed.
+    if K == 1
+        imds = imageDatastore(inputbasefolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    if K == 2
+        imds = imageDatastore(outputBaseFolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    figure
+    imshowpair(for_comparison,imread(imds.Files{1}),'montage')
+    title('Here is an example of the pre processing you just did!');
+end
+if M == 5
+    %Median Filter%
+     for_comparison = imread(imds.Files{1});
+    label_counts = imds.countEachLabel;
+    no_of_files = 0;
+    for i=1:height(label_counts)
+        no_of_files = no_of_files + label_counts{i,2};
+    end
+    % Apply Median Filter to each image
+    for i=1:no_of_files
+        img = readimage(imds,i);
+        img = medfilt2(img);
+        imwrite(img,imds.Files{i}); % push new img to its original location
+    end
+    % read the images again, they have changed.
+    if K == 1
+        imds = imageDatastore(inputbasefolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    if K == 2
+        imds = imageDatastore(outputBaseFolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    figure
+    imshowpair(for_comparison,imread(imds.Files{1}),'montage')
+    title('Here is an example of the pre processing you just did!');
+end
+if M == 6
+    %High-Pass Filter%
+     for_comparison = imread(imds.Files{1});
+    label_counts = imds.countEachLabel;
+    no_of_files = 0;
+    for i=1:height(label_counts)
+        no_of_files = no_of_files + label_counts{i,2};
+    end
+    % Apply High-Pass Filter to each image
+    for i=1:no_of_files
+        img = readimage(imds,i);
+        % Perform Detection
+        kernel = [ -1 -1 -1; -1 8 -1; -1 -1 -1];
+        img = imfilter(img, kernel, 'same');
+        imwrite(img,imds.Files{i}); % push new img to its original location
+    end
+    % read the images again, they have changed.
+    if K == 1
+        imds = imageDatastore(inputbasefolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    if K == 2
+        imds = imageDatastore(outputBaseFolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    figure
+    imshowpair(for_comparison,imread(imds.Files{1}),'montage')
+    title('Here is an example of the pre processing you just did!');    
+end
+if M == 7
 % DO NOTHING
 % Output to 'processing folder'
 end
