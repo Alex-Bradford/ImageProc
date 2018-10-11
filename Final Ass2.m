@@ -101,6 +101,12 @@ fileTable.folder=string(fileTable.folder);
 % Add full file name column to table
 fileTable.fullFileName=fileTable.folder + filesep+ fileTable.name;
 
+K = menu('Would you like to train your own Face Detector Model?','Yes','No')
+
+if K == 1
+    imds = imageDatastore(inputbasefolder, ...
+    'IncludeSubfolders',true,'LabelSource', 'foldernames');
+
 %% Train an Object Detector - for Faces
 % Load positive samples.
 uiwait(msgbox('Please select folder containing positive face samples for model training. Select Faces and export gTruth to workspace. If this fails, the default face detection will be used'));
@@ -135,9 +141,12 @@ trainCascadeObjectDetector('model.xml',positiveInstances,negativeFolder,'FalseAl
 % Store the model
 FaceDetect = vision.CascadeObjectDetector('model.xml');
 end
-% In built Face detector - 74% accurate for Yale B Dataset
-% FaceDetect = vision.CascadeObjectDetector
-% Will load if no face detection training done.
+end
+
+if K == 2
+    FaceDetect = vision.CascadeObjectDetector
+end
+
 
 %% Read input image and detect face
 for i=1:height(fileTable)
