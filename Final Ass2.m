@@ -200,13 +200,13 @@ successrate = uint8(successrate)
 
 fprintf('Successully cropped (%d of %d) images: [successrate = %d%%] \n', height(positiveFileTable), height(fileTable), successrate);
 
+imds = imageDatastore(outputBaseFolder, ...
+    'IncludeSubfolders',true,'LabelSource', 'foldernames');
+
 for_comparison = imread(fileTable.fullFileName{1});
     figure
     imshowpair(for_comparison,imread(imds.Files{1}),'montage')
     title('Here is an example of the cropping you just did!');
-
-imds = imageDatastore(outputBaseFolder, ...
-    'IncludeSubfolders',true,'LabelSource', 'foldernames');
 end
 
 M = menu('How would you like to Pre-Process the data?','Histogram Equalization','Salt & Pepper','Gaussian Blur', 'No Pre-Processing')
