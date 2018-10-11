@@ -46,21 +46,30 @@ if inputbasefolder == 0
 	return;
 end
 fprintf('The top level folder is "%s".\n', inputbasefolder);
+
+K = menu('Is the Face Dataset Cropped?','Yes','No')
+
+if K == 1
+    imds = imageDatastore(inputbasefolder, ...
+    'IncludeSubfolders',true,'LabelSource', 'foldernames');
+end
+
+if K == 2
 % Define output basefolders:
-uiwait(msgbox('Please select the successful face output directory. *note* this folders contents will be deleted prior to processing'));
+uiwait(msgbox('Please select the successfully cropped face output directory. *note* this folders contents will be deleted prior to detection'));
 outputBaseFolder = uigetdir(start_path);
 if outputBaseFolder == 0
 	return;
 end
-fprintf('The successful face output folder is "%s".\n', outputBaseFolder);
+fprintf('The successfully cropped face output folder is "%s".\n', outputBaseFolder);
 
 % Define failed basefolder:
-uiwait(msgbox('Please select the failed face output directory. *note* this folders contents will be deleted prior to processing'));
+uiwait(msgbox('Please select the failed cropped face output directory. *note* this folders contents will be deleted prior to detection'));
 failedBaseFolder = uigetdir(start_path);
 if failedBaseFolder == 0
 	return;
 end
-fprintf('The failed  face output folder is "%s".\n', failedBaseFolder);
+fprintf('The failed cropped face output folder is "%s".\n', failedBaseFolder);
 
 % Cleanup - empties the output folders
 if ~isempty(outputBaseFolder)
@@ -69,6 +78,7 @@ end
 if ~isempty(failedBaseFolder)
 delete([failedBaseFolder filesep '*.*']);
 end
+
 % Specify the file pattern.
 % Is set up for '.pgm' files
 filePattern = sprintf('%s/**/*.pgm', inputbasefolder);
@@ -91,14 +101,12 @@ fileTable.folder=string(fileTable.folder);
 % Add full file name column to table
 fileTable.fullFileName=fileTable.folder + filesep+ fileTable.name;
 
-K = menu('Is the Face Dataset Cropped?','Yes','No')
+A = menu('Would you like to train your own Face Detector Model?','Yes','No')
 
-if K == 1
+if A == 1
     imds = imageDatastore(inputbasefolder, ...
     'IncludeSubfolders',true,'LabelSource', 'foldernames');
-end
 
-if K == 2
 %% Train an Object Detector - for Faces
 % Load positive samples.
 uiwait(msgbox('Please select folder containing positive face samples for model training. Select Faces and export gTruth to workspace. If this fails, the default face detection will be used'));
@@ -133,9 +141,12 @@ trainCascadeObjectDetector('model.xml',positiveInstances,negativeFolder,'FalseAl
 % Store the model
 FaceDetect = vision.CascadeObjectDetector('model.xml');
 end
-% In built Face detector - 74% accurate for Yale B Dataset
-% FaceDetect = vision.CascadeObjectDetector
-% Will load if no face detection training done.
+end
+
+if A == 2
+    FaceDetect = vision.CascadeObjectDetector
+end
+
 
 %% Read input image and detect face
 for i=1:height(fileTable)
@@ -192,7 +203,7 @@ imds = imageDatastore(outputBaseFolder, ...
     'IncludeSubfolders',true,'LabelSource', 'foldernames');
 end
 
-M = menu('How would you like to Pre-Process the data?','Histogram Equalization','Salt & Pepper','Gaussian Blur', 'Gaussian Filter', 'Median Filter', 'High-Pass Filter', 'No Pre-Processing')
+M = menu('How would you like to Pre-Process the data?','Histogram Equalization','Salt & Pepper','Gaussian Blur', 'No Pre-Processing')
 if M == 1
 % Run histogram equalization
     % Calculate the number of files in the data store
@@ -206,125 +217,38 @@ if M == 1
     for i=1:no_of_files
         img = readimage(imds,i);
         img = histeq(img,10);
-     % Write the image to the output folder
-    outputFileName=[outputBaseFolder filesep 'image_' num2str(i) '.pgm'];
-       imwrite(img, outputFileName, 'pgm')
+        imwrite(img,imds.Files{i}); % push new img to its original location
     end
-    imos = imageDatastore(outputBaseFolder, ...
-    'IncludeSubfolders',true,'LabelSource', 'foldernames');
-    %Compare the images before and after
+    % read the images again, they have changed.
+    if K == 1
+        imds = imageDatastore(inputbasefolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
+    if K == 2
+        imds = imageDatastore(outputBaseFolder, ...
+        'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    end
     figure
-    imshowpair(for_comparison,imread(imos.Files{1}),'montage')
+    imshowpair(for_comparison,imread(imds.Files{1}),'montage')
     title('Here is an example of the pre processing you just did!');
+    
+    
+% Output to 'processing folder'
 end
 
 if M == 2
 % Salt & Pepper
- % Calculate the number of files in the data store
-        % Calculate the number of files in the data store
-    for_comparison = imread(imds.Files{1});
-    label_counts = imds.countEachLabel;
-    no_of_files = 0;
-    for i=1:height(label_counts)
-        no_of_files = no_of_files + label_counts{i,2};
-    end
-    % Add Salt & Pepper to each image
-    for i=1:no_of_files
-        img = readimage(imds,i);
-        img = imnoise(img,'salt & pepper',0.02);
-     % Write the image to the output folder
-    outputFileName=[outputBaseFolder filesep 'image_' num2str(i) '.pgm'];
-       imwrite(img, outputFileName, 'pgm')
-    end
-    imos = imageDatastore(outputBaseFolder, ...
-    'IncludeSubfolders',true,'LabelSource', 'foldernames');
-       %Compare the images before and after
-    figure
-    imshowpair(for_comparison,imread(imos.Files{1}),'montage')
-    title('Here is an example of the pre processing you just did!')
+% Output to 'processing folder'
 end
 
 if M == 3
 % Gaussian Blur
- % Calculate the number of files in the data store
-        % Calculate the number of files in the data store
-    for_comparison = imread(imds.Files{1});
-    label_counts = imds.countEachLabel;
-    no_of_files = 0;
-    for i=1:height(label_counts)
-        no_of_files = no_of_files + label_counts{i,2};
-    end
-    % Apply Gaussian Blur to each image
-    for i=1:no_of_files
-        img = readimage(imds,i);
-        img = imnoise(img,'gaussian',0,0.025);
-     % Write the image to the output folder
-    outputFileName=[outputBaseFolder filesep 'image_' num2str(i) '.pgm'];
-       imwrite(img, outputFileName, 'pgm')
-    end
-    imos = imageDatastore(outputBaseFolder, ...
-    'IncludeSubfolders',true,'LabelSource', 'foldernames');
-    %Compare the images before and after
-    figure
-    imshowpair(for_comparison,imread(imos.Files{1}),'montage')
-    title('Here is an example of the pre processing you just did!')
+imds = denoisingImageDatastore(imds);
 end
 
 if M == 4
-% Gaussian Filter
-% Calculate the number of files in the data store
-        % Calculate the number of files in the data store
-    for_comparison = imread(imds.Files{1});
-    label_counts = imds.countEachLabel;
-    no_of_files = 0;
-    for i=1:height(label_counts)
-        no_of_files = no_of_files + label_counts{i,2};
-    end
-    % Apply Gaussian Filter to each image
-    for i=1:no_of_files
-        img = readimage(imds,i);
-        img = imgaussfilt(img);
-     % Write the image to the output folder
-    outputFileName=[outputBaseFolder filesep 'image_' num2str(i) '.pgm'];
-       imwrite(img, outputFileName, 'pgm')
-    end
-    imos = imageDatastore(outputBaseFolder, ...
-    'IncludeSubfolders',true,'LabelSource', 'foldernames');
-       %Compare the images before and after
-    figure
-    imshowpair(for_comparison,imread(imos.Files{1}),'montage')
-    title('Here is an example of the pre processing you just did!')
-end
-if M == 5
-% Median Filter
-% Calculate the number of files in the data store
-        % Calculate the number of files in the data store
-    for_comparison = imread(imds.Files{1});
-    label_counts = imds.countEachLabel;
-    no_of_files = 0;
-    for i=1:height(label_counts)
-        no_of_files = no_of_files + label_counts{i,2};
-    end
-    % Apply median filter to each image
-    for i=1:no_of_files
-        img = readimage(imds,i);
-        img = medfilt2(img);
-     % Write the image to the output folder
-    outputFileName=[outputBaseFolder filesep 'image_' num2str(i) '.pgm'];
-       imwrite(img, outputFileName, 'pgm')
-    end
-    imos = imageDatastore(outputBaseFolder, ...
-    'IncludeSubfolders',true,'LabelSource', 'foldernames');
-       %Compare the images before and after
-    figure
-    imshowpair(for_comparison,imread(imos.Files{1}),'montage')
-    title('Here is an example of the pre processing you just did!')
-end
-if M == 6
-%High-Pass Filter
-end
-if M ==7
-%DO NOTHING
+% DO NOTHING
+% Output to 'processing folder'
 end
 
 N = menu('How would you like to extract your features and classify the faces','SVM with HoG','SVM with SURF','Convolution Neural Network', 'Naive Bayes with ??', 'Lucky Dip?')
