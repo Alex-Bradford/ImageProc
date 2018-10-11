@@ -445,11 +445,94 @@ end
 if N == 2
 % SVM with SURF
 % Output accuracy
+ 
+% Split the data into a training and a test set
+[trainingSet, testSet] = splitEachLabel(imds, 0.75, 'randomize');
+% Extract SURF Features and store them into a bag of words
+yaleBagOfWords = bagOfFeatures(trainingSet);
+% Train the classifier using the training set and bag of words
+yaleClassifier = trainImageCategoryClassifier(trainingSet, yaleBagOfWords);
+% Evaluate the classifier using the training set
+trainingConfMatrix = evaluate(yaleClassifier, trainingSet)
+mean(diag(trainingConfMatrix))
+% Evaluate the classifier using the test set 
+testConfMatrix = evaluate(yaleClassifier, testSet)
+mean(diag(testConfMatrix))
+ 
 end
 
 if N == 3
 % Convolution Neural Network
 % Output accuracy
+
+% Resize the images into a common size
+imds.ReadSize = numpartitions(imds);
+imds.ReadFcn = @(loc)imresize(imread(loc), [192, 168]);
+% Split the data into a training and a test set
+[trainingSet, testSet] = splitEachLabel(imds, 0.75, 'randomize');
+% Obtain the number of classes that are in the face database
+numberOfClasses = size(countEachLabel(imds), 1);
+% Create the archtiecture of the network / Define the number of layers
+
+layers = [
+    % Specficy the size of the image (192 x 168). 1 means it is B/W
+    imageInputLayer([192 168, 1])
+    
+    % Create the first convolutional layer, where the first 8 is the filter size (8
+    % x 8 filter) and the second 8 is the number of neurons that connect to
+    % the same region of the image
+    convolution2dLayer(8,8,'Padding','same')
+    % Normalise the activations and gradients to speed up the network
+    % training time and to reduce network sensitivity
+    batchNormalizationLayer
+    % A non-linear activation function. Should be followed by a batch
+    % normalisation layer
+    reluLayer
+    
+    % Down sample the feature map to remove reundant information. Allows
+    % more filters to be used without increasing the amount of computation
+    % required per layer. 
+    maxPooling2dLayer(2,'Stride',2)
+    
+    % Add another convolutional layerm but with a larger filter this time
+    convolution2dLayer(8,16,'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
+    maxPooling2dLayer(3,'Stride',2)
+       
+    % Add another convolutional layer but with a larger filter this time
+    convolution2dLayer(8,32,'Padding','same')
+    batchNormalizationLayer
+    reluLayer
+    
+    maxPooling2dLayer(2,'Stride',2)
+    
+    fullyConnectedLayer(numberOfClasses)
+    softmaxLayer
+    classificationLayer];
+
+% Define the options for the network
+
+options = trainingOptions('adam', ...
+    'ExecutionEnvironment', 'auto', ...
+    'InitialLearnRate',0.01, ...
+    'MaxEpochs',9, ...
+    'Shuffle','every-epoch', ...
+    'ValidationData',testSet, ...
+    'ValidationFrequency',40, ...
+    'Verbose',false, ...
+    'Plots','training-progress');
+
+% Train the network
+net = trainNetwork(trainingSet, layers, options);
+
+% Calculate the accuracy of the network using the test set
+YPred = classify(net, testSet);
+
+% Testing time
+sum(YPred == testSet.Labels) / numel(YPred)
+
 end
 
 if N == 4
