@@ -37,7 +37,7 @@ if ~exist(start_path, 'dir')
 end
 
 %define output size
-outputSize = [640 480];
+outputSize = [168 192];
 
 % Define a input basefolder 
 uiwait(msgbox('Please select the Top-Level FaceDataset directory.'));
@@ -199,6 +199,12 @@ successrate = (height(positiveFileTable)/height(fileTable)) *100
 successrate = uint8(successrate)
 
 fprintf('Successully cropped (%d of %d) images: [successrate = %d%%] \n', height(positiveFileTable), height(fileTable), successrate);
+
+for_comparison = imread(fileTable.fullFileName{1});
+    figure
+    imshowpair(for_comparison,imread(imds.Files{1}),'montage')
+    title('Here is an example of the cropping you just did!');
+
 imds = imageDatastore(outputBaseFolder, ...
     'IncludeSubfolders',true,'LabelSource', 'foldernames');
 end
