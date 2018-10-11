@@ -37,7 +37,7 @@ if ~exist(start_path, 'dir')
 end
 
 %define output size
-outputSize = [168 192];
+outputSize = [192 168];
 
 % Define a input basefolder 
 uiwait(msgbox('Please select the Top-Level FaceDataset directory.'));
