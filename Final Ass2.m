@@ -278,6 +278,13 @@ for_comparison = imread(fileTable.fullFileName{1});
     figure
     imshowpair(for_comparison,imread(imds.Files{1}),'montage')
     title('Here is an example of the cropping you just did!');
+    
+img = imread(fileTable.fullFileName{1});
+detectedImg = insertObjectAnnotation(img ,'rectangle',BB(1,:),'Detected Face');
+figure,
+imshow(detectedImg)
+title('Bounding box of detected Face')
+    
 end
 end
 
