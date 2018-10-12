@@ -42,9 +42,23 @@ outputSize = [192 168];
 % Define a input basefolder 
 uiwait(msgbox('Please select the Top-Level FaceDataset directory.'));
 inputbasefolder = uigetdir(start_path);
-if inputbasefolder == 0
-	return;
+
+blankstring = ' ';
+try     imds = imageDatastore(inputbasefolder, ...
+    'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    catch e %e is an MException struct
+        fprintf(1,'There was an error! The message was:\n%s',e.message);
+        fprintf(1,'\nPlease try again. \n%s')
+        fprintf('\n')
+        temp = 1
+    return;
 end
+
+if inputbasefolder == blankstring | temp == 1
+    fprintf('Failed to find dataset, try again.\n')
+	return;
+else
+
 fprintf('The top level folder is "%s".\n', inputbasefolder);
 
 K = menu('Is the Face Dataset Cropped?','Yes','No')
@@ -544,6 +558,6 @@ if N == 5
 % RANDOM!!
 % Output accuracy
 end
-
+end
 % Using the model just created, create a dialogue box to select label and
 % image and predict on that image.
