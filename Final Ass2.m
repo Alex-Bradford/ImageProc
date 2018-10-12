@@ -570,6 +570,12 @@ mean(diag(trainingConfMatrix))
 disp('The accuracy of the model was...')
 testConfMatrix = evaluate(yaleClassifier, testSet)
 mean(diag(testConfMatrix))
+
+% Generate the confusion matrix 
+figure;
+plotconfusion(YPred, testSet.Labels)
+set(findobj(gca,'type','text'),'fontsize',7);
+
  
 end
 
@@ -643,9 +649,16 @@ net = trainNetwork(trainingSet, layers, options);
 disp('Testing the model...')
 YPred = classify(net, testSet);
 
-% Testing time
 disp('The accuracy of the model was...')
 sum(YPred == testSet.Labels) / numel(YPred)
+
+% Generate the confusion matrix 
+figure;
+plotconfusion(YPred, testSet.Labels)
+set(findobj(gca,'type','text'),'fontsize',7);
+
+
+
 
 end
 
@@ -808,27 +821,35 @@ accuracy = correct_pred/(correct_pred+false_pred)
 end
 
 
-P = menu('Would you like to make a prediction on a random image to try it out?','Yes','No')
-if P == 1
-    randomLabelIndex = randi([1 uniq_labels],1);
-    figure
-    imshow(imread(imdsTest.Files{randomLabelIndex}));
-    title(['Here is a random picture, it has a class label of ' string(imdsTest.Labels(randomLabelIndex))]);
-    pred_label = predict(model,extractHOGFeatures(readimage(imdsTest,randomLabelIndex)));
-    z = 0
-    while z == 0
-        for i=1:te_no_of_files
-            if string(imdsTest.Labels(i)) == string(pred_label)
-                z = 1
-                img = imread(imdsTest.Files{i});
-            end
-        end
+P = menu('Would you like to make a prediction on a random image to try it out?','Yes','No');
+
+figure;
+
+while P == 1 
+    
+    
+    numberOfImages = numel(imds.Files);
+    randomTestImage = imread(imds.Files{randi(numberOfImages)});
+    
+    if isa(net, 'SeriesNetwork') 
+        predictionLabel = classify(net, randomTestImage);
+    else 
+        predictionLabel = predict(model, extractHOGFeatures(randomTestImage));
     end
-    Q = menu('Would you like to see the predicted image?','Yes','No')
-    if Q == 1
-        figure
-        imshow(img)
-        title(['The predicted class label is... ' string(pred_label)]);
-    end
+    
+    predictedImageIndex = find(imds.Labels == predictionLabel, 1);
+    predictedImage = imread(imds.Files{predictedImageIndex});
+    
+    imshowpair(randomTestImage, predictedImage, 'montage');
+    title('Here is the test image and the prediction');
+    
+    P = menu('Would you like to make a prediction on a random image to try it out?','Yes','No');
+    
 end
+    
+
+
+
+
+
 end
