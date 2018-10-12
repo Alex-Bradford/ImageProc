@@ -735,3 +735,4 @@ if P == 1
         title(['The predicted class label is... ' string(pred_label)]);
     end
 end
+end
