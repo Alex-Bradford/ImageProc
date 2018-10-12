@@ -117,7 +117,7 @@ fileTable.folder=string(fileTable.folder);
 fileTable.fullFileName=fileTable.folder + filesep+ fileTable.name;
 
 A = menu('Would you like to train your own Face Detector Model?','Yes','No')
-
+FaceDetect = vision.CascadeObjectDetector
 if A == 1
     imds = imageDatastore(inputbasefolder, ...
     'IncludeSubfolders',true,'LabelSource', 'foldernames');
