@@ -833,6 +833,8 @@ while P == 1
     
     if isa(model, 'SeriesNetwork') 
         predictionLabel = classify(model, randomTestImage);
+    elseif isa(model, 'ClassificationNaiveBayes')
+        predictionLabel = predict(model, extractLBPFeatures(randomTestImage));
     else 
         predictionLabel = predict(model, extractHOGFeatures(randomTestImage));
     end
