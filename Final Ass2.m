@@ -393,7 +393,7 @@ if M == 7
 % Output to 'processing folder'
 end
 
-N = menu('How would you like to extract your features and classify the faces','SVM with HoG','SVM with SURF','Convolution Neural Network', 'Naive Bayes with ??', 'Lucky Dip?')
+N = menu('How would you like to extract your features and classify the faces','SVM with HoG','SVM with SURF','Convolution Neural Network', 'Naive Bayes with LBP', 'Lucky Dip?')
 
 if N == 1
 % SVM with HOG
@@ -558,9 +558,60 @@ sum(YPred == testSet.Labels) / numel(YPred)
 end
 
 if N == 4
-% Naives Bayes with ??
-% Output accuracy
+% Naive Bayes with Local Binary Patterns
+nbImgDS = imds;
+
+%split Set into training and testing
+[trainingSet, testSet] = splitEachLabel(nbImgDS, 0.75, 'randomize');
+
+%Find number of training values
+numberOfTrainingValues = 0;
+for i =1:height(countEachLabel(trainingSet))
+    numberOfTrainingValues = numberOfTrainingValues + trainingSet.countEachLabel{i,2};
 end
+
+%Create an zero filled matrix. 59 is because that is the number of
+%dimensions LBP will output
+trainingFeatures = zeros(numberOfTrainingValues, 59);
+
+% Get features of each photo and store it in a matrix
+featureCount = 1;
+for i=1:numberOfTrainingValues
+	trainImage = readimage(trainingSet, i);
+	trainImage = imresize(trainImage, [192 168]);
+	trainingFeatures(featureCount, :) = extractLBPFeatures(trainImage, 'Upright',true);
+	trainingLabel{featureCount} = string(trainingSet.Labels(i));
+	featureCount = featureCount + 1;
+end
+trainingLabel = cellstr(trainingLabel);
+
+% Create the Model
+nbClassifier = fitcnb (trainingFeatures, trainingLabel);
+
+correct = 0;
+incorrect = 0;
+numberOfTestValues = 0;
+
+%Get Number of Test Values
+for i =1:height(countEachLabel(testSet))
+    numberOfTestValues = numberOfTestValues + testSet.countEachLabel{i,2};
+end
+
+%Check and Output Accuracy
+for j=1:numberOfTestValues
+	testImage = readimage(testSet, j);
+	testImage = imresize(testImage, [192 168]);
+	testFeatures =  extractLBPFeatures(testImage, 'Upright',true);
+	predictLabel = predict(nbClassifier, testFeatures);
+	realLabel = cellstr(string(testSet.Labels(j)));
+	if  predictLabel{1} == realLabel{1}
+		correct = correct + 1;
+	else
+		incorrect = incorrect + 1;
+	end
+end
+
+accuracy = correct/(correct + incorrect)
 
 if N == 5
 % RANDOM!!
