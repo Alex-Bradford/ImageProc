@@ -820,33 +820,38 @@ accuracy = correct_pred/(correct_pred+false_pred)
 
 end
 
+
 P = menu('Would you like to make a prediction on a random image to try it out?','Yes','No');
 
 figure;
 
 while P == 1 
     
+    
     numberOfImages = numel(imds.Files);
-    randomNumber = randi(numberOfImages);
-    randomTestImage = imread(imds.Files{randomNumber});
-    randomTestImageLabel = string(imds.Labels(randomNumber))
+    randomTestImage = imread(imds.Files{randi(numberOfImages)});
     
     if isa(model, 'SeriesNetwork') 
         predictionLabel = classify(model, randomTestImage);
+    elseif isa(model, 'ClassificationNaiveBayes')
+        predictionLabel = predict(model, extractLBPFeatures(randomTestImage));
     else 
         predictionLabel = predict(model, extractHOGFeatures(randomTestImage));
     end
     
     predictedImageIndex = find(imds.Labels == predictionLabel, 1);
     predictedImage = imread(imds.Files{predictedImageIndex});
-    predictedImageLabel = string(predictionLabel);
+    
     imshowpair(randomTestImage, predictedImage, 'montage');
-    title('Here is the test image and the predicted image');
-    text(0,220,['Class label = ',randomTestImageLabel])
-    text(168,220,['Class label = ',predictedImageLabel])
-    %title(['Test image(' randomTestImageLabel ') and the prediction(' predictedImageLabel]);
+    title('Here is the test image and the prediction');
+    
     P = menu('Would you like to make a prediction on a random image to try it out?','Yes','No');
     
 end
+    
+
+
+
+
 
 end
