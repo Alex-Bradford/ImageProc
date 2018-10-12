@@ -1,34 +1,8 @@
-%% Crop Images to a Detected Face
-%% Damien Smith - 13039957 - Image Processing Ass 2
-% In order to run this code you will need the following:
-% 1. Download Yale B Face Dataset:
-% [Found at: http://vision.ucsd.edu/~iskwak/ExtYaleDatabase/ExtYaleB.html]
-% - Original images [2 gb]
-% - Cropped images [84mb]
-% 2. Create 'successful' and 'failed' output folders
-% -optional-
-% 3. Create/find/download:
-% [For training the face detector model, if not possible it will default to the inbuilt detector]
-% - Positive Face images (a folder of images with faces)
-% - Negative Face images (a folder of images without faces)
-% [provided examples found at: https://drive.google.com/drive/folders/1R294eKzyphAufWrCLrNbiRXBQnAyGK5b?usp=sharing]
-% - Faces [2mb]
-% - NotFaces [209mb]
-%
-% You will be prompted to set the directory location of these downloaded folders
-%
-% You will be required to label faces from the Positive Faces training set
-% - After labeling, be sure to 'export' the labels to the workspace calling
-% it 'gTruth' (the default name)
-% - At this point, a warning message will appear, do not clear this message
-% until the gTruth has been exported
+%% Image Processing - 31256
+% Assignment 2 - Face Detection & Face Recognition
 % 
-% Sit back and enjoy the images process ^_^
-%
-% ***********************************************************************************
-% The Inbuilt face detector successfully identifies - 12080/16380 images (74% accurate)
-% It takes approximately 30 minutes to run with the Yale B Face dataset
-% Training mode Best model found 96.5% of faces from dataset (using provided positive/negative instances and labeling each face full-frame)
+% Please refer to the readme file for instruction on running this code
+% 
 
 % Define a start_path.
 start_path = fullfile(matlabroot, '');
