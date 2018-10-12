@@ -286,6 +286,7 @@ imshow(detectedImg)
 title('Bounding box of detected Face')
     
 end
+
 end
 
 if imds == 0
@@ -716,6 +717,7 @@ if N == 4
 end
 
 if N == 5
+
 % Naive Bayes with Local Binary Patterns
 nbImgDS = imds;
 
@@ -770,6 +772,9 @@ for j=1:numberOfTestValues
 end
 
 accuracy = correct/(correct + incorrect)
+
+
+
 
 end
 
