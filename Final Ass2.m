@@ -820,13 +820,11 @@ accuracy = correct_pred/(correct_pred+false_pred)
 
 end
 
-
 P = menu('Would you like to make a prediction on a random image to try it out?','Yes','No');
 
 figure;
 
 while P == 1 
-    
     
     numberOfImages = numel(imds.Files);
     randomNumber = randi(numberOfImages);
@@ -850,10 +848,5 @@ while P == 1
     P = menu('Would you like to make a prediction on a random image to try it out?','Yes','No');
     
 end
-    
-
-
-
-
 
 end
