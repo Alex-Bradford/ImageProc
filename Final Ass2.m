@@ -773,10 +773,40 @@ end
 
 accuracy = correct/(correct + incorrect)
 
+end
 
+if N == 6
+%Random Classifier
 
+% Get total number of values
+numberOfValues = 0;
+for i =1:height(countEachLabel(imds))
+    numberOfValues = numberOfValues + imds.countEachLabel{i,2};
+end
+
+% Get total number of labels
+numberOfLabels = height(imds.countEachLabel);
+
+correct_pred = 0;
+false_pred = 0;
+for i = 1:numberOfValues
+    
+        % Get random label
+        randomLabelIndex = randi([1 numberOfLabels],1);
+        predictLabel = imds.countEachLabel{randomLabelIndex,1};
+        actualLabel = string(imds.Labels(i));
+        
+        %Check if random label is same as actual label
+        if predictLabel == actualLabel
+            correct_pred = correct_pred + 1;
+        else
+            false_pred = false_pred + 1;
+        end
+end
+accuracy = correct_pred/(correct_pred+false_pred)
 
 end
+
 
 P = menu('Would you like to make a prediction on a random image to try it out?','Yes','No')
 if P == 1
