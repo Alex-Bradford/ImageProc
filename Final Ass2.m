@@ -775,7 +775,7 @@ for j=1:numberOfTestValues
 	testImage = readimage(imdsTest, j);
 	testImage = imresize(testImage, [192 168]);
 	testFeatures =  extractLBPFeatures(testImage, 'Upright',true);
-	predictLabel = predict(nbClassifier, testFeatures);
+	predictLabel = predict(model, testFeatures);
 	realLabel = cellstr(string(imdsTest.Labels(j)));
 	if  predictLabel{1} == realLabel{1}
 		correct = correct + 1;
