@@ -835,7 +835,9 @@ while P == 1
         predictionLabel = classify(model, randomTestImage);
     elseif isa(model, 'ClassificationNaiveBayes')
         predictionLabel = predict(model, extractLBPFeatures(randomTestImage));
-    else 
+    elseif isa(model, 'imageCategoryClassifier')
+        predictionLabel = predict(model, randomTestImage);
+    else
         predictionLabel = predict(model, extractHOGFeatures(randomTestImage));
     end
     
