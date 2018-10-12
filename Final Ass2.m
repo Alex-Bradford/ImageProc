@@ -557,23 +557,23 @@ if N == 2
 % Output accuracy
 disp('Extracting features and training the model...')
 % Split the data into a training and a test set
-[trainingSet, testSet] = splitEachLabel(imds, 0.75, 'randomize');
+[imdsTraining, imdsTest] = splitEachLabel(imds, 0.75, 'randomize');
 % Extract SURF Features and store them into a bag of words
-yaleBagOfWords = bagOfFeatures(trainingSet);
+yaleBagOfWords = bagOfFeatures(imdsTraining);
 % Train the classifier using the training set and bag of words
-yaleClassifier = trainImageCategoryClassifier(trainingSet, yaleBagOfWords);
+model = trainImageCategoryClassifier(imdsTraining, yaleBagOfWords);
 % Evaluate the classifier using the training set
 disp('Testing the model...')
-trainingConfMatrix = evaluate(yaleClassifier, trainingSet)
+trainingConfMatrix = evaluate(model, imdsTraining)
 mean(diag(trainingConfMatrix))
 % Evaluate the classifier using the test set 
 disp('The accuracy of the model was...')
-testConfMatrix = evaluate(yaleClassifier, testSet)
+testConfMatrix = evaluate(model, imdsTest)
 mean(diag(testConfMatrix))
 
 % Generate the confusion matrix 
 figure;
-plotconfusion(YPred, testSet.Labels)
+plotconfusion(YPred, imdsTest.Labels)
 set(findobj(gca,'type','text'),'fontsize',7);
 
  
@@ -587,7 +587,7 @@ disp('Extracting features and training the model...')
 imds.ReadSize = numpartitions(imds);
 imds.ReadFcn = @(loc)imresize(imread(loc), [192, 168]);
 % Split the data into a training and a test set
-[trainingSet, testSet] = splitEachLabel(imds, 0.75, 'randomize');
+[imdsTraining, imdsTest] = splitEachLabel(imds, 0.75, 'randomize');
 % Obtain the number of classes that are in the face database
 numberOfClasses = size(countEachLabel(imds), 1);
 % Create the archtiecture of the network / Define the number of layers
@@ -637,24 +637,24 @@ options = trainingOptions('adam', ...
     'InitialLearnRate',0.01, ...
     'MaxEpochs',9, ...
     'Shuffle','every-epoch', ...
-    'ValidationData',testSet, ...
+    'ValidationData',imdsTest, ...
     'ValidationFrequency',40, ...
     'Verbose',false, ...
     'Plots','training-progress');
 
 % Train the network
-net = trainNetwork(trainingSet, layers, options);
+model = trainNetwork(imdsTraining, layers, options);
 
 % Calculate the accuracy of the network using the test set
 disp('Testing the model...')
-YPred = classify(net, testSet);
+YPred = classify(model, imdsTest);
 
 disp('The accuracy of the model was...')
-sum(YPred == testSet.Labels) / numel(YPred)
+sum(YPred == imdsTest.Labels) / numel(YPred)
 
 % Generate the confusion matrix 
 figure;
-plotconfusion(YPred, testSet.Labels)
+plotconfusion(YPred, imdsTest.Labels)
 set(findobj(gca,'type','text'),'fontsize',7);
 
 
@@ -735,12 +735,12 @@ if N == 5
 nbImgDS = imds;
 
 %split Set into training and testing
-[trainingSet, testSet] = splitEachLabel(nbImgDS, 0.75, 'randomize');
+[imdsTraining, imdsTest] = splitEachLabel(nbImgDS, 0.75, 'randomize');
 
 %Find number of training values
 numberOfTrainingValues = 0;
-for i =1:height(countEachLabel(trainingSet))
-    numberOfTrainingValues = numberOfTrainingValues + trainingSet.countEachLabel{i,2};
+for i =1:height(countEachLabel(imdsTraining))
+    numberOfTrainingValues = numberOfTrainingValues + imdsTraining.countEachLabel{i,2};
 end
 
 %Create an zero filled matrix. 59 is because that is the number of
@@ -750,33 +750,33 @@ trainingFeatures = zeros(numberOfTrainingValues, 59);
 % Get features of each photo and store it in a matrix
 featureCount = 1;
 for i=1:numberOfTrainingValues
-	trainImage = readimage(trainingSet, i);
+	trainImage = readimage(imdsTraining, i);
 	trainImage = imresize(trainImage, [192 168]);
 	trainingFeatures(featureCount, :) = extractLBPFeatures(trainImage, 'Upright',true);
-	trainingLabel{featureCount} = string(trainingSet.Labels(i));
+	trainingLabel{featureCount} = string(imdsTraining.Labels(i));
 	featureCount = featureCount + 1;
 end
 trainingLabel = cellstr(trainingLabel);
 
 % Create the Model
-nbClassifier = fitcnb (trainingFeatures, trainingLabel);
+model = fitcnb (trainingFeatures, trainingLabel);
 
 correct = 0;
 incorrect = 0;
 numberOfTestValues = 0;
 
 %Get Number of Test Values
-for i =1:height(countEachLabel(testSet))
-    numberOfTestValues = numberOfTestValues + testSet.countEachLabel{i,2};
+for i =1:height(countEachLabel(imdsTest))
+    numberOfTestValues = numberOfTestValues + imdsTest.countEachLabel{i,2};
 end
 
 %Check and Output Accuracy
 for j=1:numberOfTestValues
-	testImage = readimage(testSet, j);
+	testImage = readimage(imdsTest, j);
 	testImage = imresize(testImage, [192 168]);
 	testFeatures =  extractLBPFeatures(testImage, 'Upright',true);
 	predictLabel = predict(nbClassifier, testFeatures);
-	realLabel = cellstr(string(testSet.Labels(j)));
+	realLabel = cellstr(string(imdsTest.Labels(j)));
 	if  predictLabel{1} == realLabel{1}
 		correct = correct + 1;
 	else
@@ -831,8 +831,8 @@ while P == 1
     numberOfImages = numel(imds.Files);
     randomTestImage = imread(imds.Files{randi(numberOfImages)});
     
-    if isa(net, 'SeriesNetwork') 
-        predictionLabel = classify(net, randomTestImage);
+    if isa(model, 'SeriesNetwork') 
+        predictionLabel = classify(model, randomTestImage);
     else 
         predictionLabel = predict(model, extractHOGFeatures(randomTestImage));
     end
