@@ -42,24 +42,9 @@ outputSize = [192 168];
 % Define a input basefolder 
 uiwait(msgbox('Please select the Top-Level FaceDataset directory.'));
 inputbasefolder = uigetdir(start_path);
-
-blankstring = ' ';
-temp = 0;
-try     imds = imageDatastore(inputbasefolder, ...
-    'IncludeSubfolders',true,'LabelSource', 'foldernames');
-    catch e %e is an MException struct
-        fprintf(1,'There was an error! The message was:\n%s',e.message);
-        fprintf(1,'\nPlease try again. \n%s')
-        fprintf('\n')
-        temp = 1
-    return;
-end
-
-if inputbasefolder == blankstring | temp == 1
-    fprintf('Failed to find dataset, try again.\n')
+if inputbasefolder == 0
 	return;
-else
-
+end
 fprintf('The top level folder is "%s".\n', inputbasefolder);
 
 K = menu('Is the Face Dataset Cropped?','Yes','No')
@@ -117,7 +102,7 @@ fileTable.folder=string(fileTable.folder);
 fileTable.fullFileName=fileTable.folder + filesep+ fileTable.name;
 
 A = menu('Would you like to train your own Face Detector Model?','Yes','No')
-FaceDetect = vision.CascadeObjectDetector
+
 if A == 1
     imds = imageDatastore(inputbasefolder, ...
     'IncludeSubfolders',true,'LabelSource', 'foldernames');
@@ -228,6 +213,7 @@ M = menu('How would you like to Pre-Process the data?','Histogram Equalization',
 if M == 1
 % Run histogram equalization
     % Calculate the number of files in the data store
+    disp('Pre processing now...')
     for_comparison = imread(imds.Files{1});
     label_counts = imds.countEachLabel;
     no_of_files = 0;
@@ -260,6 +246,7 @@ end
 if M == 2
 % Salt & Pepper
 % Calculate the number of files in the data store
+    disp('Pre processing now...')
     for_comparison = imread(imds.Files{1});
     label_counts = imds.countEachLabel;
     no_of_files = 0;
@@ -288,6 +275,7 @@ end
 
 if M == 3
 % Gaussian Blur
+    disp('Pre processing now...')
     for_comparison = imread(imds.Files{1});
     label_counts = imds.countEachLabel;
     no_of_files = 0;
@@ -316,7 +304,8 @@ end
 
 if M == 4
     %Gaussian Filter%
- for_comparison = imread(imds.Files{1});
+    disp('Pre processing now...')
+    for_comparison = imread(imds.Files{1});
     label_counts = imds.countEachLabel;
     no_of_files = 0;
     for i=1:height(label_counts)
@@ -325,7 +314,7 @@ if M == 4
     % Apply Gaussian Filter to each image
     for i=1:no_of_files
         img = readimage(imds,i);
-        img = imgaussfilt(img);
+        img = imgaussfilt(img,2);
         imwrite(img,imds.Files{i}); % push new img to its original location
     end
     % read the images again, they have changed.
@@ -343,7 +332,8 @@ if M == 4
 end
 if M == 5
     %Median Filter%
-     for_comparison = imread(imds.Files{1});
+    disp('Pre processing now...')
+    for_comparison = imread(imds.Files{1});
     label_counts = imds.countEachLabel;
     no_of_files = 0;
     for i=1:height(label_counts)
@@ -352,7 +342,7 @@ if M == 5
     % Apply Median Filter to each image
     for i=1:no_of_files
         img = readimage(imds,i);
-        img = medfilt2(img);
+        img = medfilt2(img,[7 7]);
         imwrite(img,imds.Files{i}); % push new img to its original location
     end
     % read the images again, they have changed.
@@ -370,7 +360,8 @@ if M == 5
 end
 if M == 6
     %High-Pass Filter%
-     for_comparison = imread(imds.Files{1});
+    disp('Pre processing now...')
+    for_comparison = imread(imds.Files{1});
     label_counts = imds.countEachLabel;
     no_of_files = 0;
     for i=1:height(label_counts)
@@ -406,6 +397,7 @@ N = menu('How would you like to extract your features and classify the faces','S
 
 if N == 1
 % SVM with HOG
+    disp('Extracting features and training the model...')
     % resize all images
     imds.ReadSize = numpartitions(imds);
     imds.ReadFcn = @(loc)imresize(imread(loc), [192, 168]);
@@ -442,25 +434,36 @@ if N == 1
         te_no_of_files = te_no_of_files + te_label_counts{i,2};
     end
     % for each test file
+    disp('Testing the model...')
     correct_pred = 0;
     false_pred = 0;
     for i=1:te_no_of_files
         pred_label = predict(model,extractHOGFeatures(readimage(imdsTest,i)));
         real_label = cellstr(string(imdsTest.Labels(i)));
+        array_real_labels{i} = real_label;
+        array_pred_labels{i} = pred_label;
         if pred_label{1} == real_label{1}
             correct_pred = correct_pred + 1;
         else
             false_pred = false_pred + 1;
         end
     end
-    accur = correct_pred/(correct_pred+false_pred)
+    disp(['The accuracy of the model was... '])
+    accuracy = correct_pred/(correct_pred+false_pred)
+    B = categorical(string(array_real_labels));
+    C = categorical(string(array_pred_labels));
+    figure(1);
+    title('Maximise the window');
+    plotconfusion(B,C);
+    %fontsize
+    set(findobj(gca,'type','text'),'fontsize',7);
 % Output accuracy
 end
 
 if N == 2
 % SVM with SURF
 % Output accuracy
- 
+disp('Extracting features and training the model...')
 % Split the data into a training and a test set
 [trainingSet, testSet] = splitEachLabel(imds, 0.75, 'randomize');
 % Extract SURF Features and store them into a bag of words
@@ -468,9 +471,11 @@ yaleBagOfWords = bagOfFeatures(trainingSet);
 % Train the classifier using the training set and bag of words
 yaleClassifier = trainImageCategoryClassifier(trainingSet, yaleBagOfWords);
 % Evaluate the classifier using the training set
+disp('Testing the model...')
 trainingConfMatrix = evaluate(yaleClassifier, trainingSet)
 mean(diag(trainingConfMatrix))
 % Evaluate the classifier using the test set 
+disp('The accuracy of the model was...')
 testConfMatrix = evaluate(yaleClassifier, testSet)
 mean(diag(testConfMatrix))
  
@@ -479,7 +484,7 @@ end
 if N == 3
 % Convolution Neural Network
 % Output accuracy
-
+disp('Extracting features and training the model...')
 % Resize the images into a common size
 imds.ReadSize = numpartitions(imds);
 imds.ReadFcn = @(loc)imresize(imread(loc), [192, 168]);
@@ -543,9 +548,11 @@ options = trainingOptions('adam', ...
 net = trainNetwork(trainingSet, layers, options);
 
 % Calculate the accuracy of the network using the test set
+disp('Testing the model...')
 YPred = classify(net, testSet);
 
 % Testing time
+disp('The accuracy of the model was...')
 sum(YPred == testSet.Labels) / numel(YPred)
 
 end
@@ -559,6 +566,27 @@ if N == 5
 % RANDOM!!
 % Output accuracy
 end
+
+P = menu('Would you like to make a prediction on a random image to try it out?','Yes','No')
+if P == 1
+    randomLabelIndex = randi([1 uniq_labels],1);
+    figure
+    imshow(imread(imdsTest.Files{randomLabelIndex}));
+    title(['Here is a random picture, it has a class label of ' string(imdsTest.Labels(randomLabelIndex))]);
+    pred_label = predict(model,extractHOGFeatures(readimage(imdsTest,randomLabelIndex)));
+    z = 0
+    while z == 0
+        for i=1:te_no_of_files
+            if string(imdsTest.Labels(i)) == string(pred_label)
+                z = 1
+                img = imread(imdsTest.Files{i});
+            end
+        end
+    end
+    Q = menu('Would you like to see the predicted image?','Yes','No')
+    if Q == 1
+        figure
+        imshow(img)
+        title(['The predicted class label is... ' string(pred_label)]);
+    end
 end
-% Using the model just created, create a dialogue box to select label and
-% image and predict on that image.
