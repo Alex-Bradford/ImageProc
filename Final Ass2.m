@@ -39,36 +39,83 @@ end
 %define output size
 outputSize = [192 168];
 
+
+fprintf('Please select the Top-Level FaceDataset directory.\n')
+fprintf('Click OK and select from the browser.\n')
+fprintf('\n')
+
 % Define a input basefolder 
 uiwait(msgbox('Please select the Top-Level FaceDataset directory.'));
 inputbasefolder = uigetdir(start_path);
-if inputbasefolder == 0
-	return;
+blankstring = ' ';
+temp = 0;
+imds = 0;
+try     imds = imageDatastore(inputbasefolder, ...
+    'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    catch e %e is an MException struct
+        fprintf(1,'There was an error! The message was:\n%s',e.message);
+        fprintf(1,'\nPlease try again. \n%s')
+        fprintf('\n')
+        temp = 1
+    return;
 end
+
+if inputbasefolder == blankstring | temp == 1
+    fprintf('Failed to find dataset, try again.\n')
+	return;
+else
+
 fprintf('The top level folder is "%s".\n', inputbasefolder);
 
+fprintf('\n')
+fprintf('Is the Face Dataset Cropped?.\n')
+fprintf('Select Yes or No from the menu.\n')
+fprintf('\n')
+
+K = 55;
 K = menu('Is the Face Dataset Cropped?','Yes','No')
 
+if K == 0
+    fprintf('Menu closed. "%s".\n')
+    fprintf('Proceeding to Pre-Processing Menu. "%s".\n')
+    fprintf('\n')
+end
+    
 if K == 1
     imds = imageDatastore(inputbasefolder, ...
     'IncludeSubfolders',true,'LabelSource', 'foldernames');
 end
 
 if K == 2
+    fprintf('Please select the successfully cropped face output directory.\n')
+    fprintf('*note* this folders contents will be deleted prior to detection.\n')
+    fprintf('Click OK and select from the browser.\n')
+    fprintf('\n')
+  
 % Define output basefolders:
 uiwait(msgbox('Please select the successfully cropped face output directory. *note* this folders contents will be deleted prior to detection'));
 outputBaseFolder = uigetdir(start_path);
 if outputBaseFolder == 0
-	return;
-end
+	fprintf('Failed to define the successful cropped face output folder.\n')
+    fprintf('Unable to train model.\n')
+    fprintf('Proceeding to Pre-Processing.\n')
+    else
 fprintf('The successfully cropped face output folder is "%s".\n', outputBaseFolder);
+        fprintf('\n')
 
+    fprintf('Please select the failed cropped face output directory.\n')
+    fprintf('*note* this folders contents will be deleted prior to detection.\n')
+    fprintf('Click OK and select from the browser.\n')
+    fprintf('\n')
 % Define failed basefolder:
 uiwait(msgbox('Please select the failed cropped face output directory. *note* this folders contents will be deleted prior to detection'));
 failedBaseFolder = uigetdir(start_path);
 if failedBaseFolder == 0
-	return;
-end
+	fprintf('Failed to define the failed cropped face output folder.\n')
+    fprintf('Unable to train model.\n')
+    fprintf('Proceeding to Pre-Processing.\n')
+ else
+
 fprintf('The failed cropped face output folder is "%s".\n', failedBaseFolder);
 
 % Cleanup - empties the output folders
@@ -85,13 +132,6 @@ filePattern = sprintf('%s/**/*.pgm', inputbasefolder);
 % Get ALL images
 files = dir(filePattern);
 
-% Create logical list of folders.
-%isFolder = [files.isdir]; 
-% Deletes folders from the list (if they exist)
-%if ~isempty(isFolder)
-%allFileInfo(isFolder) = [];
-%end
-
 % Convert files to a table
 fileTable =struct2table(files);
 % Add name column to table
@@ -101,23 +141,52 @@ fileTable.folder=string(fileTable.folder);
 % Add full file name column to table
 fileTable.fullFileName=fileTable.folder + filesep+ fileTable.name;
 
+fprintf('\n')
+fprintf('Would you like to train your own Face Detector Model?.\n')
+fprintf('Select Yes or No from the menu.\n')
+fprintf('*note* Selecting No (or closing the menu) will select the default MATLAB face detection model.\n')
+fprintf('\n')
+
 A = menu('Would you like to train your own Face Detector Model?','Yes','No')
+FaceDetect = vision.CascadeObjectDetector
 
 if A == 1
     imds = imageDatastore(inputbasefolder, ...
     'IncludeSubfolders',true,'LabelSource', 'foldernames');
 
 %% Train an Object Detector - for Faces
+gTruth = 0;
+
+fprintf('Please select folder containing positive face samples for model training.\n')
+fprintf('The Image Labeller will open.\n')
+fprintf('Label as many faces as you would like (the more the better).\n')
+fprintf('If you select an empty folder, it is possible to load additional folders from the Image Labeller menu.\n')
+fprintf('Use the export gTruth to workspace option.\n')
+fprintf('Be sure to save as the default name - gtruth.\n')
+fprintf('\n')
+
+fprintf('*NOTE* DO NOT CLOSE THE WARNING until after exporting gtruth.\n')
+fprintf('The default model will be used in the event of an error.\n')
+fprintf('\n')
 % Load positive samples.
 uiwait(msgbox('Please select folder containing positive face samples for model training. Select Faces and export gTruth to workspace. If this fails, the default face detection will be used'));
 tempfolder = uigetdir(start_path);
-if isempty(tempfolder)
-	FaceDetect = vision.CascadeObjectDetector
+if tempfolder == 0
+	fprintf('Failed to find positive face samples for model Training.\n')
+    fprintf('Training on the default Face Detector Model.\n')
+    FaceDetect = vision.CascadeObjectDetector
 else
 fprintf('The positive face samples folder is "%s".\n', tempfolder);
 imageLabeler(tempfolder)
 mydlg = warndlg('Close this dialogue AFTER you have exported your gTruth from image Labeler', 'Warning');
 waitfor(mydlg);
+if gTruth == 0
+    fprintf('Failed to find gTruth (Ground Truth).\n')
+    fprintf('Training on the default Face Detector Model.\n')
+    mydlg = warndlg('Failed to find gTruth (Ground Truth). The Default Face Detector Model will be used.', 'Warning');
+    waitfor(mydlg);
+    FaceDetect = vision.CascadeObjectDetector
+else
 % convert gTruth into positiveInstances table
 temp = gTruth.DataSource.Source(:,1:1);
 %temp = cell2table(temp)
@@ -125,12 +194,37 @@ temp2 = gTruth.LabelData(:,1:1);
 %temp2 = cell2table(temp2)
 positiveInstances = [temp temp2];
 
+fprintf('Please select folder containing negative face samples for model training.\n')
+fprintf('\n')
+fprintf('The default model will be used in the event of an error.\n')
+fprintf('\n')
+
 %Specify the folder for negative images.
 uiwait(msgbox('Please select folder containing negative face samples for model training.'));
 negativeFolder = uigetdir(start_path);
-if tempfolder == 0
-	FaceDetect = vision.CascadeObjectDetector
+temp = 0;
+try     imds = imageDatastore(inputbasefolder, ...
+    'IncludeSubfolders',true,'LabelSource', 'foldernames');
+    catch e %e is an MException struct
+        fprintf(1,'There was an error! The message was:\n%s',e.message);
+        fprintf('\n')
+        temp = 1
+    return;
 end
+
+if negativeFolder == 0
+	fprintf('Failed to find negative face samples for model Training.\n')
+    fprintf('Training on the default Face Detector Model.\n')
+    mydlg = warndlg('Failed to find gTruth (Ground Truth). The Default Face Detector Model will be used.', 'Warning');
+    waitfor(mydlg);
+    FaceDetect = vision.CascadeObjectDetector
+elseif temp == 1
+    fprintf('Failed to find negative face samples for model Training.\n')
+    fprintf('Training on the default Face Detector Model.\n')
+    mydlg = warndlg('Failed to find gTruth (Ground Truth). The Default Face Detector Model will be used.', 'Warning');
+    waitfor(mydlg);
+    FaceDetect = vision.CascadeObjectDetector
+else
 
 %Create an imageDatastore object containing negative images.
 negativeImages = imageDatastore(negativeFolder);
@@ -142,9 +236,12 @@ trainCascadeObjectDetector('model.xml',positiveInstances,negativeFolder,'FalseAl
 FaceDetect = vision.CascadeObjectDetector('model.xml');
 end
 end
+end
+end
 
-if A == 2
+if A == 2 | A == 0
     FaceDetect = vision.CascadeObjectDetector
+    fprintf('Training on the default Face Detector Model.\n')
 end
 
 
@@ -208,6 +305,18 @@ for_comparison = imread(fileTable.fullFileName{1});
     imshowpair(for_comparison,imread(imds.Files{1}),'montage')
     title('Here is an example of the cropping you just did!');
 end
+end
+
+if imds == 0
+        imds = imageDatastore(inputbasefolder, ...
+    'IncludeSubfolders',true,'LabelSource', 'foldernames');
+end
+
+
+end
+
+fprintf('How would you like to Pre-Process the data? \n')
+fprintf('Select from the menu. \n')
 
 M = menu('How would you like to Pre-Process the data?','Histogram Equalization','Salt & Pepper Noise','Gaussian Blur', 'Gaussian Filter', 'Median Filter', 'High-Pass Filter', 'No Pre-Processing')
 if M == 1
