@@ -44,6 +44,7 @@ uiwait(msgbox('Please select the Top-Level FaceDataset directory.'));
 inputbasefolder = uigetdir(start_path);
 
 blankstring = ' ';
+temp = 0;
 try     imds = imageDatastore(inputbasefolder, ...
     'IncludeSubfolders',true,'LabelSource', 'foldernames');
     catch e %e is an MException struct
