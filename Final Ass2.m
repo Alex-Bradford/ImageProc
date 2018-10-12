@@ -393,7 +393,7 @@ if M == 7
 % Output to 'processing folder'
 end
 
-N = menu('How would you like to extract your features and classify the faces','SVM with HoG','SVM with SURF','Convolution Neural Network', 'Naive Bayes with ??', 'Lucky Dip?')
+N = menu('How would you like to extract your features and classify the faces','SVM with HOG','SVM with SURF','Convolution Neural Network', 'Decision Tree with HOG', 'Lucky Dip?')
 
 if N == 1
 % SVM with HOG
@@ -450,6 +450,7 @@ if N == 1
     end
     disp(['The accuracy of the model was... '])
     accuracy = correct_pred/(correct_pred+false_pred)
+    msgbox('Maximise the confusion matrix to enhance readability')
     B = categorical(string(array_real_labels));
     C = categorical(string(array_pred_labels));
     figure(1);
@@ -558,12 +559,73 @@ sum(YPred == testSet.Labels) / numel(YPred)
 end
 
 if N == 4
-% Naives Bayes with ??
+% Decision Tree with HOG
+    disp('Extracting features and training the model...')
+    % resize all images
+    imds.ReadSize = numpartitions(imds);
+    imds.ReadFcn = @(loc)imresize(imread(loc), [192, 168]);
+    % split into train and test
+    uniq_labels = countEachLabel(imds);
+    uniq_labels = height(uniq_labels);
+    label_counts = imds.countEachLabel;
+    numTrainFiles = round(0.8*label_counts{1,2},0);
+    [imdsTraining, imdsTest] = splitEachLabel(imds, numTrainFiles, 'randomize');
+    % create array to store features
+    trainingFeatures = zeros(numTrainFiles*uniq_labels,16560);
+    % calc number of files
+    tr_no_of_files = 0;
+    tr_label_counts = imdsTraining.countEachLabel;
+    for i=1:height(tr_label_counts);
+        tr_no_of_files = tr_no_of_files + tr_label_counts{i,2};
+    end
+    % Get HOGFeatures for each image
+    featureCount = 1;
+    for i=1:tr_no_of_files;
+        trainingFeatures(featureCount,:) = extractHOGFeatures(readimage(imdsTraining,i));
+        trainingLabel{featureCount} = string(imdsTraining.Labels(i));
+        featureCount = featureCount + 1;
+        %personIndex{i} = training(i).Description;
+    end
+    trainingLabel = cellstr(trainingLabel);
+    % train the model
+    model = fitctree(trainingFeatures, trainingLabel);
+    % test the model and calc accuracy
+    % calc number of files
+    te_no_of_files = 0;
+    te_label_counts = imdsTest.countEachLabel;
+    for i=1:height(te_label_counts)
+        te_no_of_files = te_no_of_files + te_label_counts{i,2};
+    end
+    % for each test file
+    disp('Testing the model...')
+    correct_pred = 0;
+    false_pred = 0;
+    for i=1:te_no_of_files
+        pred_label = predict(model,extractHOGFeatures(readimage(imdsTest,i)));
+        real_label = cellstr(string(imdsTest.Labels(i)));
+        array_real_labels{i} = real_label;
+        array_pred_labels{i} = pred_label;
+        if pred_label{1} == real_label{1}
+            correct_pred = correct_pred + 1;
+        else
+            false_pred = false_pred + 1;
+        end
+    end
+    disp(['The accuracy of the model was... '])
+    accuracy = correct_pred/(correct_pred+false_pred)
+    msgbox('Maximise the confusion matrix to enhance readability')
+    B = categorical(string(array_real_labels));
+    C = categorical(string(array_pred_labels));
+    figure(1);
+    title('Maximise the window');
+    plotconfusion(B,C);
+    %fontsize
+    set(findobj(gca,'type','text'),'fontsize',7);
 % Output accuracy
 end
 
 if N == 5
-% RANDOM!!
+% Random  
 % Output accuracy
 end
 
