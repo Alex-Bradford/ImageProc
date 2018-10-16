@@ -571,12 +571,6 @@ disp('The accuracy of the model was...')
 testConfMatrix = evaluate(model, imdsTest)
 mean(diag(testConfMatrix))
 
-% Generate the confusion matrix 
-figure;
-plotconfusion(YPred, imdsTest.Labels)
-set(findobj(gca,'type','text'),'fontsize',7);
-
- 
 end
 
 if N == 3
